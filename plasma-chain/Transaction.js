@@ -4,18 +4,22 @@ var su = require('eth-sig-util');
 var sign = require('../utils').sign;
 
 class Transaction {
-  constructor(blockNum1, txIndex1, oIndex1, blockNum2, txIndex2, oIndex2, newOwner1, amount1, newOwner2, amount2, fee, sig1, sig2) {
+  constructor(blockNum1, txIndex1, oIndex1, 
+              blockNum2, txIndex2, oIndex2, 
+              newOwner1, amount1, 
+              newOwner2, amount2, 
+              fee, sig1, sig2) {
     // Input 1
     this.blockNum1 = blockNum1;
     this.txIndex1 = txIndex1;
     this.oIndex1 = oIndex1;
-    this.sig1 = sig1;
+    this.sig1 = sig1 || u.zeros(65);
 
     // Input 2
     this.blockNum2 = blockNum2;
     this.txIndex2 = txIndex2;
     this.oIndex2 = oIndex2;
-    this.sig2 = sig2;
+    this.sig2 = sig2 || u.zeros(65);
 
     // Outputs
     this.newOwner1 = su.normalize(newOwner1);
@@ -35,7 +39,7 @@ class Transaction {
   }
   
   get hash() {
-    return u.sha3(rlp.encode(this.toArray));
+    return u.sha3(rlp.encode(this.toArray()));
   }
         
   get merkleHash() {
@@ -62,21 +66,19 @@ class Transaction {
     return get_sender(this.hash, this.sig2); 
   }
 
-  get toArray() {
+  toArray() {
     return [
-      ['blknum1', this.blockNum1],
-      ['txindex1', this.txIndex1],
-      ['oindex1', this.oIndex1],
-      ['blknum2', this.blockNum2],
-      ['txindex2', this.txIndex2],
-      ['oindex2', this.oIndex2],
-      ['newowner1', this.newOwner1],
-      ['amount1', this.amount1],
-      ['newowner2', this.newOwner2],
-      ['amount2', this.amount2],
-      ['fee', this.fee],
-      ['sig1', this.sig1],
-      ['sig2', this.sig2]
+      this.blockNum1,
+      this.txIndex1,
+      this.oIndex1,
+      this.blockNum2,
+      this.txIndex2,
+      this.oIndex2,
+      this.newOwner1,
+      this.amount1,
+      this.newOwner2,
+      this.amount2,
+      this.fee
     ];
   }
 }
