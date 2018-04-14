@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "node server.js"
   },
   "author": "Andrei Anisimov",
@@ -13,5 +13,8 @@
     "eth-sig-util": "^1.4.2",
     "ethereumjs-util": "^5.1.5",
     "rlp": "^2.0.0"
+  },
+  "devDependencies": {
+    "jest": "^22.4.3"
   }
 }
