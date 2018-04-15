@@ -35,6 +35,8 @@ class Block {
     ];
     if (withSigs) {
       arr.push(this.sig);
+    } else {
+      arr.push(eu.zeros(65));
     }
     return arr;
   }

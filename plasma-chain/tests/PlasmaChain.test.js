@@ -65,7 +65,8 @@ test('Transaction should apply correctly', () => {
   const transactionBlock = plasma.blocks[2];
   const txSet = transactionBlock.transactionSet;
   const tx = txSet[0];
-  const getTransaction = plasma.getTransaction(2, 0)
+  const getTransaction = plasma.getTransaction(2, 0);
+  const getBlock = plasma.getBlock(2);
   const merkilizeTransactionSet =  eu.bufferToHex(transactionBlock.merkilizeTransactionSet);
 
   expect(txSet.length).toBe(1);
@@ -74,6 +75,7 @@ test('Transaction should apply correctly', () => {
   expect(tx.blockNum1).toBe(blockNum1);
   expect(depositBlock.transactionSet[0].spent1).toBe(true);
   expect(getTransaction).toBe(eu.bufferToHex(txOrig.toRLP(true)));
+  expect(getBlock).toBe(eu.bufferToHex(block.toRLP(false)));
   expect(merkilizeTransactionSet).toBe('0x91e19f42c4821aad428b682862945d6be715027f42a614d6090bf08a4e3c91a8');
 });
 
