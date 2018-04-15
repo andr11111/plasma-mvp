@@ -27,8 +27,8 @@ class PlasmaChain {
     applyDeposit(event) {
       var newOwner1 = event['args']['depositor'];
       var amount1 = event['args']['amount'];
-      var blknum1 = event['args']['depositBlock'];
-      var depositTx = new Transaction(blknum1, 0, 0, 0, 0, 0,
+      var blockNum1 = event['args']['depositBlock'];
+      var depositTx = new Transaction(blockNum1, 0, 0, 0, 0, 0,
         newOwner1, amount1, eu.zeroAddress(), 0, 0);
       var depositBlock = new Block([depositTx]);
       // Add block validation
@@ -37,46 +37,48 @@ class PlasmaChain {
     }
 
     applyTransaction(transaction) {
-      var tx = new Transaction.fromRLP(transaction);
+      var tx = Transaction.fromRLP(transaction);
 
       // Validate the transaction
       this.validateTx(tx);
 
       // Mark the inputs as spent
-      this.markUtxoSpent(tx.blkNum1, tx.txIndex1, tx.oIndex1);
-      this.markUtxoSpent(tx.blkNum2, tx.txIndex2, tx.oIndex2);
+      this.markUtxoSpent(tx.blockNum1, tx.txIndex1, tx.oIndex1);
+      this.markUtxoSpent(tx.blockNum2, tx.txIndex2, tx.oIndex2);
 
-      this.currentBlock.transactionSet.append(tx);
+      this.currentBlock.transactionSet.push(tx);
     }
 
     validateTx(tx) {
-      var inputs = [{blkNum: tx.blkNum1, txIndex: tx.txIndex1, oIndex: tx.oIndex1}, 
-        {blkNum: tx.blkNum2, txIndex: tx.txIndex2, oIndex: tx.oIndex2}];
+      var inputs = [{blkNum: tx.blockNum1, txIndex: tx.txIndex1, oIndex: tx.oIndex1}, 
+        {blkNum: tx.blockNum2, txIndex: tx.txIndex2, oIndex: tx.oIndex2}];
 
       var outputAmount = tx.amount1 + tx.amount2 + tx.fee;
       var inputAmount = 0;
 
-      for (var { blkNum, txIndex, oIndex } in inputs) {
-          // Assume empty inputs and are valid
-          if (blkNum == 0) continue;
+      for (const key in inputs) {
+        const input = inputs[key];
+        const { blkNum, txIndex, oIndex } = input;
+        // Assume empty inputs and are valid
+        if (blkNum == 0) continue;
 
-          var transaction = this.blocks[blkNum].transactionSet[txIndex];
+        var transaction = this.blocks[blkNum].transactionSet[txIndex];
 
-          if (oIndex == 0) {
-            var isValidSignature = tx.sig1 != eu.zeros(65) && transaction.newOwner1 == tx.sender1;
-            var spent = transaction.spent1;
-            inputAmount += transaction.amount1;
-          } else {
-            var isValidSignature = tx.sig2 != eu.zeros(65) && transaction.newOwner2 == tx.sender2;
-            var spent = transaction.spent2;
-            inputAmount += transaction.amount2;
-          }
-          if (spent) {
-            throw new TxAlreadySpentException('failed to validate tx');
-          }              
-          if (!isValidSignature) {
-            throw new InvalidTxSignatureException('failed to validate tx');
-          }              
+        if (oIndex == 0) {
+          var isValidSignature = tx.sig1 != eu.zeros(65) && transaction.newOwner1 == tx.sender1;
+          var spent = transaction.spent1;
+          inputAmount += transaction.amount1;
+        } else {
+          var isValidSignature = tx.sig2 != eu.zeros(65) && transaction.newOwner2 == tx.sender2;
+          var spent = transaction.spent2;
+          inputAmount += transaction.amount2;
+        }
+        if (spent) {
+          throw new TxAlreadySpentException('failed to validate tx');
+        }              
+        if (!isValidSignature) {
+          throw new InvalidTxSignatureException('failed to validate tx');
+        }              
       }
 
       if (inputAmount != outputAmount) {
@@ -96,11 +98,11 @@ class PlasmaChain {
 
     submitBlock(block) {
       block = Block.fromRLP(block);
-      if (block.merkilizeTransactionSet != self.currentBlock.merkilizeTransactionSet) {
+      if (!block.merkilizeTransactionSet.equals(this.currentBlock.merkilizeTransactionSet)) {
         throw new InvalidBlockMerkleException('input block merkle mismatch with the current block');
       }          
 
-      var isValidSignature = block.sig != eu.zeros(65) && block.sender == self.authority;
+      var isValidSignature = !block.sig.equals(eu.zeros(65)) && block.sender == this.authority;
       if (!isValidSignature) {
         throw new InvalidBlockSignatureException('failed to submit block');
       }          
@@ -113,19 +115,19 @@ class PlasmaChain {
     }
 
     getTransaction(blkNum, txIndex) {
-      return eu.bufferToHex(this.blocks[blkNum].transactionSet[txIndex].toRLP());
+      return eu.bufferToHex(this.blocks[blkNum].transactionSet[txIndex].toRLP(true));
     }        
 
     getBlock(blkNum) {
-      return eu.bufferToHex(this.blocks[blkNum].toRLP());
+      return eu.bufferToHex(this.blocks[blkNum].toRLP(true));
     }        
 
     getCurrentBlock() {
-      return eu.bufferToHex(this.currentBlock.toRLP());
+      return eu.bufferToHex(this.currentBlock.toRLP(true));
     }        
 
     getCurrentBlockNum() {
-      return self.currentBlockNumber;
+      return this.currentBlockNumber;
     }        
 }
 

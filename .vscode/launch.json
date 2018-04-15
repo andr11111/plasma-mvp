@@ -7,8 +7,21 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Test",
+      "runtimeExecutable": null,
+      "runtimeArgs": [
+        "--inspect-brk",
+        "./node_modules/.bin/jest",
+        "-i"
+      ],
+      "port": 9229,
+      "cwd": "${workspaceFolder}/plasma-chain"
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/plasma-chain/test.js",
+      "program": "${workspaceFolder}/plasma-chain/debug.js",
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]

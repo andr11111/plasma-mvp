@@ -1,6 +1,7 @@
 var rlp = require('rlp');
 var eu = require('ethereumjs-util');
 var utils = require('../utils');
+var { MerkleTree } = require('../utils/MerkleTree');
 var Transaction = require('./Transaction');
 
 class Block {
@@ -11,7 +12,7 @@ class Block {
   }
   
   get hash() {
-    return eu.sha3(this.toRLP());
+    return eu.sha3(this.toRLP(false));
   }
         
   sign(key) {
@@ -22,11 +23,10 @@ class Block {
     return utils.getSender(this.hash, this.sig)
   }
 
-  get merkilizeTransactionSet() {
-    throw new Error("Not implemented");
+  get merkilizeTransactionSet() {    
     var hashedTransactionSet = this.transactionSet.map(t => t.merkleHash);
-    //this.merkle = FixedMerkle(16, hashed_transaction_set, hashed=True)
-    //return self.merkle.root  
+    this.merkle = new MerkleTree(16, hashedTransactionSet, true);
+    return this.merkle.root;
   }
 
   toArray(withSigs = false) {

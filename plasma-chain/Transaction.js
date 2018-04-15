@@ -39,11 +39,11 @@ class Transaction {
   }
   
   get hash() {
-    return eu.sha3(rlp.encode(this.toArray()));
+    return eu.sha3(this.toRLP(false));
   }
         
   get merkleHash() {
-    return eu.sha3(this.hash + this.sig1 + this.sig2);
+    return eu.sha3(Buffer.concat([this.hash, this.sig1, this.sig2]));
   }
 
   sign1(key) {

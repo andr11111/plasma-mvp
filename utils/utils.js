@@ -14,6 +14,6 @@ module.exports = {
     r = sig.slice(0, 32);
     s = sig.slice(32, 64);
     pub = eu.ecrecover(hash, v, r, s);
-    return eu.sha3(pub).slice(-20);
+    return eu.bufferToHex(eu.sha3(pub).slice(-20));
   }
 } 
