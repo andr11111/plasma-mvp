@@ -2,24 +2,49 @@ const PlasmaChain = require('../PlasmaChain');
 const Transaction = require('../Transaction');
 const Block = require('../Block');
 const eu = require('ethereumjs-util');
+const contractAPI = require('../../root-chain/api');
 
 const address = '0xfd02ecee62797e75d86bcff1642eb0844afb28c7';
 const key = '0x3bb369fecdc16b93b99514d8ed9c2e87c5824cf4a6a98d2e8e91b7dd0c063304';
+/*
+var Web3 = require('web3');
+var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+*/
+
+
 const mockEventListener = {
   watch: (callback) => {}
-}
+};
+
+test('sending money to a contract', async () => {
+
+  const contract = await contractAPI('http://localhost:7545');
+
+//  console.log("contract = \n", contract);
+//  web3.eth.sendTransaction({to:"0x0Daf5d4b7c12885Bd382f98960F9D9A338e5A197", from:"0x33F969364650b113cf3daEC027e4Be8b1fA3D38e", value:web3.toWei("0.5", "ether") });
+
+//  console.log("test = ", contractAPI.web3.toWei("0.5", "ether"));
+  console.log("sent transaction");
+  const result = await contract.deposit({
+    value: contractAPI.web3.toWei("0.5", "ether"),
+    from: "0x33F969364650b113cf3daEC027e4Be8b1fA3D38e"
+  });
+    console.log("result = ", result);
+}, 100000);
+
 const mockRootChain = {
   on: (event) => {return mockEventListener;},
   transact: () => {return {submitBlock: () => {}}}
-}
+};
 
-test('Deposit should apply correctly', () => {
-  const plasma = new PlasmaChain(address, mockRootChain);
+test('Deposit should apply correctly', async () => {
+  const rootChain = await contractAPI('http://localhost:7545');
+  const plasma = new PlasmaChain(address, rootChain);
   const depositEvent = {args: {
     depositor: address,
     amount: 5,
     depositBlock: 1
-  }}
+  }};
   plasma.applyDeposit(depositEvent);
   const depositBlock = plasma.blocks[plasma.currentBlockNumber - 1];
   const txSet = depositBlock.transactionSet;
@@ -32,13 +57,13 @@ test('Deposit should apply correctly', () => {
 
 
 test('Transaction should apply correctly', () => {
-  
+
   const plasma = new PlasmaChain(address, mockRootChain);
   const depositEvent = {args: {
     depositor: address,
     amount: 5,
     depositBlock: 1
-  }}
+  }};
   plasma.applyDeposit(depositEvent);
 
   var blockNum1 = 1;
@@ -52,15 +77,15 @@ test('Transaction should apply correctly', () => {
   var newOwner2 = eu.zeroAddress();
   var amount2 = 0;
   var fee = 0;
-  var txOrig = new Transaction(blockNum1, txIndex1, oIndex1, blockNum2, txIndex2, oIndex2, newOwner1, amount1, newOwner2, amount2, fee);
+  let txOrig = new Transaction(blockNum1, txIndex1, oIndex1, blockNum2, txIndex2, oIndex2, newOwner1, amount1, newOwner2, amount2, fee);
   txOrig.sign1(key);
-  block = new Block([txOrig])
+  let block = new Block([txOrig]);
   block.sign(key);
 
-  plasma.applyTransaction(txOrig.toRLP(true));  
-  
+  plasma.applyTransaction(txOrig.toRLP(true));
+
   plasma.submitBlock(block.toRLP(true));
-  
+
   const depositBlock = plasma.blocks[1];
   const transactionBlock = plasma.blocks[2];
   const txSet = transactionBlock.transactionSet;

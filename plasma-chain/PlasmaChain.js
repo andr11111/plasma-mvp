@@ -8,20 +8,23 @@ const { InvalidBlockMerkleException,
         TxAmountMismatchException } = require('./exceptions');
 const Transaction = require('./Transaction');
 
+const privateKey = "0xab20602947d0ce8c2dba8fd941a12bc05560c636c5c1a6e85ff6eaefdad080b5";
 
 class PlasmaChain {
 
     constructor(authority, rootChain) {
       this.rootChain = rootChain;
       this.authority = authority;
-      this.blocks = {};
+      this.blocks = [];
       this.currentBlockNumber = 1;
       this.currentBlock = new Block();
       this.pendingTransactions = [];
 
       // Register for deposit event listener
-      var depositFilter = this.rootChain.on('Deposit');
-      depositFilter.watch(this.applyDeposit);
+      this.rootChain.Deposit({}, (error, event) => {
+        console.log("received an event", event);
+        this.applyDeposit(event);
+      });
     }
 
     applyDeposit(event) {
@@ -50,7 +53,7 @@ class PlasmaChain {
     }
 
     validateTx(tx) {
-      var inputs = [{blkNum: tx.blockNum1, txIndex: tx.txIndex1, oIndex: tx.oIndex1}, 
+      var inputs = [{blkNum: tx.blockNum1, txIndex: tx.txIndex1, oIndex: tx.oIndex1},
         {blkNum: tx.blockNum2, txIndex: tx.txIndex2, oIndex: tx.oIndex2}];
 
       var outputAmount = tx.amount1 + tx.amount2 + tx.fee;
@@ -75,15 +78,15 @@ class PlasmaChain {
         }
         if (spent) {
           throw new TxAlreadySpentException('failed to validate tx');
-        }              
+        }
         if (!isValidSignature) {
           throw new InvalidTxSignatureException('failed to validate tx');
-        }              
+        }
       }
 
       if (inputAmount != outputAmount) {
         throw new TxAmountMismatchException('failed to validate tx');
-      }          
+      }
     }
 
     markUtxoSpent(blkNum, txIndex, oIndex) {
@@ -96,18 +99,31 @@ class PlasmaChain {
       }
     }
 
-    submitBlock(block) {
+    async submitCurrentBlock() {
+      const currentBlock = Block.fromRLP(this.currentBlock.toRLP(true));
+      currentBlock.sign(privateKey);
+      await this.submitBlock(currentBlock.toRLP(true));
+    }
+
+    async submitBlock(block) {
+      console.log("test 1", block);
       block = Block.fromRLP(block);
+      console.log("test 2");
       if (!block.merkilizeTransactionSet.equals(this.currentBlock.merkilizeTransactionSet)) {
         throw new InvalidBlockMerkleException('input block merkle mismatch with the current block');
-      }          
+      }
 
-      var isValidSignature = !block.sig.equals(eu.zeros(65)) && block.sender == this.authority;
+      console.log("test 3", block.sender, this.authority, block.sender === this.authority);
+      var isValidSignature = !block.sig.equals(eu.zeros(65)) && block.sender === this.authority;
       if (!isValidSignature) {
         throw new InvalidBlockSignatureException('failed to submit block');
-      }          
+      }
 
-      this.rootChain.transact({'from': '0x' + eu.bufferToHex(this.authority)}).submitBlock(block.merkle.root, this.currentBlockNumber);
+//      this.rootChain.transact({'from': '0x' + eu.bufferToHex(this.authority)}).submitBlock(block.merkle.root, this.currentBlockNumber);
+      console.log("will submit", eu.bufferToHex(block.merkle.root), this.authority);
+      this.rootChain.submitBlock(eu.bufferToHex(block.merkle.root), {
+        from: this.authority
+      });
       // TODO: iterate through block and validate transactions
       this.blocks[this.currentBlockNumber] = this.currentBlock;
       this.currentBlockNumber += 1;
@@ -116,19 +132,19 @@ class PlasmaChain {
 
     getTransaction(blkNum, txIndex) {
       return eu.bufferToHex(this.blocks[blkNum].transactionSet[txIndex].toRLP(true));
-    }        
+    }
 
     getBlock(blkNum) {
       return eu.bufferToHex(this.blocks[blkNum].toRLP(true));
-    }        
+    }
 
     getCurrentBlock() {
       return eu.bufferToHex(this.currentBlock.toRLP(true));
-    }        
+    }
 
     getCurrentBlockNum() {
       return this.currentBlockNumber;
-    }        
+    }
 }
 
 module.exports = PlasmaChain;
