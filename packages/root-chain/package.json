@@ -1,0 +1,16 @@
+{
+  "name": "root-chain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "api/index.js",
+  "dependencies": {
+    "truffle-contract": "^3.0.4",
+    "web3": "^0.20.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

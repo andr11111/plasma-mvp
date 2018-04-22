@@ -1,0 +1,10 @@
+{
+	"devDependencies": {
+		"lerna": "^2.10.2"
+  },
+  "scripts": {
+    "ganache-cli": "ganache-cli -m=plasma_mvp",
+    "deploy-contract": "lerna exec --scope root-chain -- truffle deploy",
+    "plasma-chain": "lerna run --scope plasma-chain start --stream"
+  }
+}

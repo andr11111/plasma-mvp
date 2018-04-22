@@ -21,7 +21,7 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/plasma-chain/debug.js",
+      "program": "${workspaceFolder}/plasma-chain/server.js",
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]
