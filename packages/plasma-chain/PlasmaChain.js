@@ -1,4 +1,3 @@
-const rlp = require('rlp');
 const eu = require('ethereumjs-util');
 
 const Block = require('./Block');

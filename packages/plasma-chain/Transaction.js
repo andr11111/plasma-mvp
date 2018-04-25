@@ -1,13 +1,12 @@
-var rlp = require('rlp');
 var eu = require('ethereumjs-util');
 var su = require('eth-sig-util');
 var utils = require('../utils');
 
 class Transaction {
-  constructor(blockNum1, txIndex1, oIndex1, 
-              blockNum2, txIndex2, oIndex2, 
-              newOwner1, amount1, 
-              newOwner2, amount2, 
+  constructor(blockNum1, txIndex1, oIndex1,
+              blockNum2, txIndex2, oIndex2,
+              newOwner1, amount1,
+              newOwner2, amount2,
               fee, sig1, sig2) {
     // Input 1
     this.blockNum1 = blockNum1;
@@ -35,13 +34,13 @@ class Transaction {
     this.confirmation2 = null;
 
     this.spent1 = null;
-    this.spent2 = null;   
+    this.spent2 = null;
   }
-  
+
   get hash() {
     return eu.sha3(this.toRLP(false));
   }
-        
+
   get merkleHash() {
     return eu.sha3(Buffer.concat([this.hash, this.sig1, this.sig2]));
   }
@@ -55,15 +54,15 @@ class Transaction {
   }
 
   get isSingleUtxo() {
-    return this.blockNum2 === 0;    
+    return this.blockNum2 === 0;
   }
-  
+
   get sender1() {
     return utils.getSender(this.hash, this.sig1);
   }
-  
+
   get sender2() {
-    return utils.getSender(this.hash, this.sig2); 
+    return utils.getSender(this.hash, this.sig2);
   }
 
   toArray(withSigs = false) {
@@ -90,7 +89,7 @@ class Transaction {
   }
 
   toRLP(withSigs = false) {
-    return rlp.encode(this.toArray(withSigs));
+    return eu.rlp.encode(this.toArray(withSigs));
   }
 
   static fromArray(arr) {
@@ -103,7 +102,7 @@ class Transaction {
     var oIndex2 = eu.bufferToInt(arr[5]);
 
     var newOwner1 = eu.bufferToHex(arr[6]);
-    var amount1 = eu.bufferToInt(arr[7]); 
+    var amount1 = eu.bufferToInt(arr[7]);
 
     var newOwner2 = eu.bufferToHex(arr[8]);
     var amount2 = eu.bufferToInt(arr[9]);
@@ -114,15 +113,15 @@ class Transaction {
     var sig2 = arr[12];
 
     return new Transaction(
-      blockNum1, txIndex1, oIndex1, 
-      blockNum2, txIndex2, oIndex2, 
-      newOwner1, amount1, 
-      newOwner2, amount2, 
+      blockNum1, txIndex1, oIndex1,
+      blockNum2, txIndex2, oIndex2,
+      newOwner1, amount1,
+      newOwner2, amount2,
       fee, sig1, sig2);
   }
 
   static fromRLP(rlpObj) {
-    var txArray = rlp.decode(rlpObj);
+    var txArray = eu.rlp.decode(rlpObj);
     return Transaction.fromArray(txArray);
   }
 }
